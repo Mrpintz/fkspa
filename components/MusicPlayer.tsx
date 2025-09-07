@@ -1,130 +1,84 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
-import { generateTrackDescription, GEMINI_API_KEY_ERROR } from '../services/geminiService';
-import { PlayIcon, PauseIcon, NextIcon, PrevIcon, GeminiIcon, LoadingSpinnerIcon, CloseIcon } from './icons/Icons';
+import { PlayIcon, PauseIcon } from './icons/Icons';
+
+const SkipIcon: React.FC<{ reversed?: boolean } & React.SVGProps<SVGSVGElement>> = ({ reversed = false, ...props }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6" {...props}>
+      <path d={reversed ? "M5.586 12l7.707-7.707 1.414 1.414L8.414 12l6.293 6.293-1.414 1.414L5.586 12zM18 18h-2V6h2v12z" : "M18.414 12l-7.707 7.707-1.414-1.414L15.586 12 9.293 5.707l1.414-1.414L18.414 12zM6 6h2v12H6V6z"} />
+    </svg>
+);
+
 
 const MusicPlayer: React.FC = () => {
-  const { currentTrack, isPlaying, progress, duration, togglePlayPause, seek, playNext, playPrev } = useMusicPlayer();
-  const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
-  const [aiDescription, setAiDescription] = useState('');
-  const [isLoadingAi, setIsLoadingAi] = useState(false);
-  const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
-
-  useEffect(() => {
-    // When the track changes, close the panel and reset its state
-    setIsAiPanelOpen(false);
-    setAiDescription('');
-    setIsApiKeyMissing(false);
-  }, [currentTrack]);
+  const { currentTrack, isPlaying, togglePlayPause, playNext, playPrev, duration, currentTime, seek, playlist } = useMusicPlayer();
+  
+  const currentIndex = playlist.findIndex(t => t.id === currentTrack?.id);
+  const canGoPrev = currentIndex > 0;
+  const canGoNext = currentIndex > -1 && currentIndex < playlist.length - 1;
 
   if (!currentTrack) {
     return null;
   }
 
-  const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+  const formatTime = (time: number) => {
+    if (isNaN(time) || time < 0) return '0:00';
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
-  const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const bar = e.currentTarget;
-    const rect = bar.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const percentage = clickX / rect.width;
-    seek(duration * percentage);
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    seek(Number(e.target.value));
   };
   
-  const handleGenerateDescription = async () => {
-      if (!currentTrack) return;
-      setIsAiPanelOpen(true);
-      setIsLoadingAi(true);
-      setIsApiKeyMissing(false); // Reset on each attempt
-      
-      const description = await generateTrackDescription(currentTrack);
-      
-      if (description === GEMINI_API_KEY_ERROR) {
-        setIsApiKeyMissing(true);
-        setAiDescription('');
-      } else {
-        setAiDescription(description);
-      }
-      setIsLoadingAi(false);
-  }
-
   return (
-    <footer className="fixed bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-md border-t border-gray-700/50 z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-sm border-t border-gray-700 z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="h-24 flex items-center justify-between">
-          {/* Track Info */}
-          <div className="flex items-center space-x-4 w-1/4">
+        <div className="flex items-center justify-between h-24">
+          
+          <div className="flex items-center space-x-4 w-1/4 min-w-0">
             <img src={currentTrack.albumArtUrl} alt={currentTrack.title} className="w-14 h-14 rounded-md object-cover" />
-            <div>
-              <p className="font-semibold text-white truncate">{currentTrack.title}</p>
+            <div className="min-w-0">
+              <p className="font-bold text-white truncate">{currentTrack.title}</p>
               <p className="text-sm text-gray-400 truncate">{currentTrack.artist}</p>
             </div>
           </div>
-
-          {/* Player Controls & Progress */}
-          <div className="flex flex-col items-center justify-center w-1/2">
-            <div className="flex items-center space-x-6">
-              <button onClick={playPrev} className="text-gray-300 hover:text-white transition-colors" aria-label="Previous track"><PrevIcon /></button>
-              <button onClick={togglePlayPause} className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-gray-900 shadow-lg transform hover:scale-105 transition-transform" aria-label={isPlaying ? 'Pause' : 'Play'}>
-                {isPlaying ? <PauseIcon /> : <PlayIcon />}
-              </button>
-              <button onClick={playNext} className="text-gray-300 hover:text-white transition-colors" aria-label="Next track"><NextIcon /></button>
-            </div>
-            <div className="w-full flex items-center space-x-2 mt-2">
-                <span className="text-xs text-gray-400">{formatTime(progress)}</span>
-                <div className="w-full h-1.5 bg-gray-600 rounded-full cursor-pointer group" onClick={handleProgressBarClick}>
-                    <div 
-                        className="h-full bg-indigo-500 rounded-full group-hover:bg-indigo-400" 
-                        style={{ width: `${(progress / duration) * 100}%` }}
+          
+          <div className="flex flex-col items-center justify-center flex-grow max-w-2xl">
+              <div className="flex items-center space-x-6">
+                <button onClick={playPrev} disabled={!canGoPrev} className="text-gray-400 hover:text-white transition-colors disabled:text-gray-600 disabled:cursor-not-allowed">
+                    <SkipIcon reversed />
+                </button>
+                <button
+                    onClick={togglePlayPause}
+                    className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-black shadow-lg transform transition-transform hover:scale-105"
+                    aria-label={isPlaying ? "Pause" : "Play"}
+                >
+                    {isPlaying ? <PauseIcon className="w-8 h-8"/> : <PlayIcon className="w-8 h-8 ml-1" />}
+                </button>
+                 <button onClick={playNext} disabled={!canGoNext} className="text-gray-400 hover:text-white transition-colors disabled:text-gray-600 disabled:cursor-not-allowed">
+                    <SkipIcon />
+                </button>
+              </div>
+              <div className="w-full flex items-center space-x-2 mt-2">
+                  <span className="text-xs text-gray-400 w-10 text-right">{formatTime(currentTime)}</span>
+                  <input
+                    type="range"
+                    min="0"
+                    max={duration || 0}
+                    value={currentTime}
+                    onChange={handleSeek}
+                    className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full"
                     />
-                </div>
-                <span className="text-xs text-gray-400">{formatTime(duration)}</span>
-            </div>
+                  <span className="text-xs text-gray-400 w-10">{formatTime(duration)}</span>
+              </div>
           </div>
-
-          {/* Extra Controls */}
-          <div className="flex items-center justify-end w-1/4">
-            <button onClick={handleGenerateDescription} className="text-gray-300 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-700" title="Get AI Insights">
-                <GeminiIcon />
-            </button>
+          
+          <div className="flex items-center space-x-4 w-1/4 justify-end">
           </div>
         </div>
       </div>
-      
-       {/* AI Insights Panel */}
-      {isAiPanelOpen && (
-          <div className="absolute bottom-full left-0 right-0 p-6 bg-gray-800 border-t border-b border-gray-700 shadow-2xl">
-              <div className="container mx-auto relative">
-                <button onClick={() => setIsAiPanelOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><CloseIcon/></button>
-                <h4 className="text-lg font-bold flex items-center mb-4"><GeminiIcon/> AI Insights for "{currentTrack.title}"</h4>
-                {isLoadingAi ? (
-                    <div className="flex items-center space-x-2 text-gray-300"><LoadingSpinnerIcon /> <span>Generating...</span></div>
-                ) : isApiKeyMissing ? (
-                    <div className="bg-yellow-900/50 border border-yellow-700 text-yellow-200 px-4 py-3 rounded-lg">
-                        <h5 className="font-bold">Configuration Needed</h5>
-                        <p className="text-sm mt-1 mb-3">To enable AI Insights, you need to set up your Gemini API Key.</p>
-                        <ol className="list-decimal list-inside text-sm space-y-2">
-                            <li>
-                                <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="font-semibold underline hover:text-white">
-                                    Get your free API Key
-                                </a> from Google AI Studio.
-                            </li>
-                            <li>
-                                In your Netlify settings, go to <strong className="font-semibold">Site settings &gt; Build & deploy &gt; Environment</strong> and add a variable named <code className="bg-gray-700 px-1 py-0.5 rounded text-xs">API_KEY</code> with your key as the value. Then, redeploy your site.
-                            </li>
-                        </ol>
-                    </div>
-                ) : (
-                    <p className="text-gray-300 text-sm">{aiDescription}</p>
-                )}
-              </div>
-          </div>
-      )}
-    </footer>
+    </div>
   );
 };
 

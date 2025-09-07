@@ -52,29 +52,25 @@ export const generatePlaylist = async (prompt: string, tracks: Track[]): Promise
             config: {
                 systemInstruction,
                 responseMimeType: "application/json",
+                // FIX: Simplified the response schema to directly request an array of numbers (track IDs).
+                // This is more efficient and directly matches the system instruction.
                 responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        playlist: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    trackId: {
-                                        type: Type.NUMBER,
-                                        description: 'The ID of the track to add to the playlist.'
-                                    }
-                                }
-                            }
-                        }
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.NUMBER,
+                        description: 'The ID of the track to add to the playlist.'
                     }
                 }
             }
         });
         
-        const jsonResponse = JSON.parse(response.text);
-        const trackIds = jsonResponse.playlist.map((item: { trackId: number }) => item.trackId);
-        return trackIds;
+        // FIX: Updated parsing logic to handle the simplified array response.
+        const trackIds = JSON.parse(response.text);
+        if (Array.isArray(trackIds) && trackIds.every(id => typeof id === 'number')) {
+            return trackIds;
+        }
+        console.warn("AI response was not an array of numbers:", trackIds);
+        return [];
 
     } catch (error) {
         console.error("Error generating playlist:", error);
