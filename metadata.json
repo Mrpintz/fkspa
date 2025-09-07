@@ -1,0 +1,5 @@
+{
+  "name": "Fkspa",
+  "description": "A sleek and modern web application for clients to stream exclusive AI-generated music. Users can access tracks based on their subscription plan, enjoying a seamless playback experience with a persistent audio player.",
+  "requestFramePermissions": []
+}
