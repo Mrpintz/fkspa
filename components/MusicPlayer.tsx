@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
 import { generateTrackDescription, GEMINI_API_KEY_ERROR } from '../services/geminiService';
-import { PlayIcon, PauseIcon, NextIcon, PrevIcon, GeminiIcon, LoadingSpinnerIcon, CloseIcon, VolumeUpIcon, VolumeOffIcon } from './icons/Icons';
+import { PlayIcon, PauseIcon, NextIcon, PrevIcon, GeminiIcon, LoadingSpinnerIcon, CloseIcon } from './icons/Icons';
 
 const MusicPlayer: React.FC = () => {
-  const { currentTrack, isPlaying, progress, duration, volume, togglePlayPause, seek, playNext, playPrev, setVolume, toggleMute } = useMusicPlayer();
+  const { currentTrack, isPlaying, progress, duration, togglePlayPause, seek, playNext, playPrev } = useMusicPlayer();
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
   const [aiDescription, setAiDescription] = useState('');
   const [isLoadingAi, setIsLoadingAi] = useState(false);
@@ -23,7 +22,6 @@ const MusicPlayer: React.FC = () => {
   }
 
   const formatTime = (seconds: number): string => {
-    if (isNaN(seconds) || seconds < 0) return '0:00';
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
@@ -89,26 +87,10 @@ const MusicPlayer: React.FC = () => {
           </div>
 
           {/* Extra Controls */}
-          <div className="flex items-center justify-end w-1/4 space-x-3">
+          <div className="flex items-center justify-end w-1/4">
             <button onClick={handleGenerateDescription} className="text-gray-300 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-700" title="Get AI Insights">
                 <GeminiIcon />
             </button>
-            {/* Volume Controls */}
-            <div className="flex items-center w-28">
-              <button onClick={toggleMute} className="text-gray-300 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-700" title={volume === 0 ? "Unmute" : "Mute"}>
-                  {volume === 0 ? <VolumeOffIcon /> : <VolumeUpIcon />}
-              </button>
-              <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={volume}
-                  onChange={(e) => setVolume(parseFloat(e.target.value))}
-                  className="w-full h-1.5 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                  aria-label="Volume"
-              />
-            </div>
           </div>
         </div>
       </div>

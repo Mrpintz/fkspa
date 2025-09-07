@@ -8,14 +8,11 @@ interface MusicPlayerContextType {
   isPlaying: boolean;
   progress: number;
   duration: number;
-  volume: number;
   playTrack: (track: Track, playlist?: Track[]) => void;
   togglePlayPause: () => void;
   seek: (time: number) => void;
   playNext: () => void;
   playPrev: () => void;
-  setVolume: (volume: number) => void;
-  toggleMute: () => void;
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
@@ -26,30 +23,8 @@ export const MusicPlayerProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolumeState] = useState<number>(() => {
-    const savedVolume = localStorage.getItem('fkspa-volume');
-    return savedVolume ? parseFloat(savedVolume) : 1;
-  });
-  const [lastVolume, setLastVolume] = useState(volume);
-
 
   const audioRef = useRef<HTMLAudioElement>(null);
-
-  const setVolume = (newVolume: number) => {
-    const clampedVolume = Math.max(0, Math.min(1, newVolume));
-    setVolumeState(clampedVolume);
-    localStorage.setItem('fkspa-volume', String(clampedVolume));
-  };
-
-  const toggleMute = () => {
-    if (volume > 0) {
-        setLastVolume(volume);
-        setVolume(0);
-    } else {
-        setVolume(lastVolume > 0 ? lastVolume : 1);
-    }
-  };
-
 
   const playTrack = (track: Track, newPlaylist: Track[] = TRACKS) => {
     setCurrentTrack(track);
@@ -110,13 +85,6 @@ export const MusicPlayerProvider: React.FC<{ children: ReactNode }> = ({ childre
   
   useEffect(() => {
     const audio = audioRef.current;
-    if (audio) {
-        audio.volume = volume;
-    }
-  }, [volume]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
     if (!audio) return;
     
     const handleTimeUpdate = () => setProgress(audio.currentTime);
@@ -136,7 +104,7 @@ export const MusicPlayerProvider: React.FC<{ children: ReactNode }> = ({ childre
 
 
   return (
-    <MusicPlayerContext.Provider value={{ currentTrack, isPlaying, progress, duration, volume, playTrack, togglePlayPause, seek, playNext, playPrev, setVolume, toggleMute }}>
+    <MusicPlayerContext.Provider value={{ currentTrack, isPlaying, progress, duration, playTrack, togglePlayPause, seek, playNext, playPrev }}>
       {children}
       <audio ref={audioRef} />
     </MusicPlayerContext.Provider>
