@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const MusicIcon: React.FC = () => (
@@ -68,5 +69,17 @@ export const MagicWandIcon: React.FC = () => (
 export const PlaySolidIcon: React.FC<{className?: string}> = ({ className = "h-5 w-5" }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
         <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+    </svg>
+);
+
+export const VolumeUpIcon: React.FC = () => (
+    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 2a6 6 0 00-6 6v4a6 6 0 1012 0V8a6 6 0 00-6-6zM8 8a2 2 0 114 0v4a2 2 0 11-4 0V8z"></path>
+    </svg>
+);
+
+export const VolumeOffIcon: React.FC = () => (
+    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z" clipRule="evenodd"></path>
     </svg>
 );
